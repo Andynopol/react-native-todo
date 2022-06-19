@@ -4,7 +4,7 @@ import {
     HOST
 } from "./constatnts";
 
-export const login = async ( loginData ) => fetch( `${HOST}/usr/login`, {
+export const login = async ( loginData ) => fetch( `${ HOST }/usr/login`, {
     method: 'POST',
     body: JSON.stringify( loginData ),
     headers: {
@@ -12,7 +12,7 @@ export const login = async ( loginData ) => fetch( `${HOST}/usr/login`, {
     },
 } );
 
-export const register = async ( registerData ) => fetch( `${HOST}/usr/register`, {
+export const register = async ( registerData ) => fetch( `${ HOST }/usr/register`, {
     method: 'POST',
     body: JSON.stringify( registerData ),
     headers: {

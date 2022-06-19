@@ -34,7 +34,6 @@ const SplashScreen = ( { navigation } ) => {
 
                     }
                     AsyncStorage.removeItem( 'auth' );
-                    autologin();
                 } catch ( err )
                 {
                     return navigation.replace( 'Auth' );
@@ -43,15 +42,6 @@ const SplashScreen = ( { navigation } ) => {
             );
         }, 3000 );
     }, [] );
-
-    const autologin = async () => {
-        const email = await AsyncStorage.getItem( 'email' );
-        const password = await AsyncStorage.getItem( 'password' );
-        const response = await ( await login( { email, password } ) ).json();
-        const { user, token } = response;
-        if ( !user || !token ) throw new Error( "Go to login" );
-        AsyncStorage.setItem( 'auth', JSON.stringify( { user, token } ) );
-    };
 
     return (
         <View style={styles.container}>

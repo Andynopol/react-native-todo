@@ -1,7 +1,7 @@
 /* eslint-disable prettier/prettier */
 /* eslint-disable react-native/no-inline-styles */
 /* eslint-disable no-alert */
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
     StyleSheet,
     TextInput,
@@ -58,6 +58,30 @@ const LoginScreen = ( { navigation } ) => {
             setLoading( false );
         }
     };
+
+    const autologin = async () => {
+        try
+        {
+            setLoading( true );
+            const storageMail = await AsyncStorage.getItem( 'email' );
+            const storagePass = await AsyncStorage.getItem( 'password' );
+            const response = await ( await login( { email: storageMail, password: storagePass } ) ).json();
+            const { user, token } = response;
+            if ( !user || !token ) throw new Error( response.message );
+            AsyncStorage.setItem( 'auth', JSON.stringify( { user, token } ) );
+            navigation.replace( "Home" );
+        } catch ( err )
+        {
+            alert( err.message );
+        } finally
+        {
+            setLoading( false );
+        }
+    };
+
+    useEffect( () => {
+        autologin();
+    }, [] );
 
     return (
         <View style={styles.mainBody}>

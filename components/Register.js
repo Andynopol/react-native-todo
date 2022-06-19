@@ -12,24 +12,22 @@ import {
     Keyboard,
     TouchableOpacity,
     ScrollView,
+    AsyncStorage,
 } from 'react-native';
 
 import Loader from './Loader';
+import { register } from '../api/userApi';
 
 const RegisterScreen = ( props ) => {
     const [ firstName, setFirstName ] = useState( '' );
     const [ lastName, setLastName ] = useState( '' );
     const [ email, setEmail ] = useState( '' );
     const [ password, setPassword ] = useState( '' );
-    const [ confirmedPassword, setConfirmedPassword ] = useState( '' );
+    const [ confirmPassword, setConfirmPassword ] = useState( '' );
     const [ loading, setLoading ] = useState( false );
     const [ errortext, setErrortext ] = useState( '' );
-    const [
-        isRegistraionSuccess,
-        setIsRegistraionSuccess,
-    ] = useState( false );
 
-    const handleSubmitButton = () => {
+    const handleSubmitButton = async () => {
         setErrortext( '' );
         if ( !firstName )
         {
@@ -51,7 +49,7 @@ const RegisterScreen = ( props ) => {
             alert( 'Please fill your Password' );
             return;
         }
-        if ( confirmedPassword !== password )
+        if ( confirmPassword !== password )
         {
             alert( 'Passwords don \'t match' );
             return;
@@ -59,66 +57,23 @@ const RegisterScreen = ( props ) => {
         //Show Loader
         setLoading( true );
 
-        fetch( 'http://doublea1-babilon.go.ro:3800/usr/register', {
-            method: 'POST',
-            body: JSON.stringify( { firstName, lastName, email, password, confirmedPassword } ),
-            headers: {
-                //Header Defination
-                'Content-Type': 'application/json',
-            },
-        } )
-            .then( ( response ) => response.json() )
-            .then( ( responseJson ) => {
-                //Hide Loader
-                setLoading( false );
-                console.log( responseJson );
-                // If server response message same as Data Matched
-                if ( responseJson.status === 'success' )
-                {
-                    setIsRegistraionSuccess( true );
-                    console.log(
-                        'Registration Successful. Please Login to proceed'
-                    );
-                } else
-                {
-                    setErrortext( responseJson.msg );
-                }
-            } )
-            .catch( ( error ) => {
-                //Hide Loader
-                setLoading( false );
-                console.error( error );
-            } );
+        try
+        {
+            const response = await ( await register( { firstName, lastName, email, password, confirmPassword } ) ).json();
+            const { status } = response;
+            if ( !status || status !== "OK" ) throw new Error( response.message );
+            AsyncStorage.removeItem( 'auth' );
+            AsyncStorage.setItem( 'email', email );
+            AsyncStorage.setItem( 'password', password );
+            props.navigation.navigate( 'Splash' );
+        } catch ( err )
+        {
+            // alert( err.message );
+        } finally
+        {
+            setLoading( false );
+        }
     };
-    if ( isRegistraionSuccess )
-    {
-        return (
-            <View
-                style={{
-                    flex: 1,
-                    backgroundColor: '#307ecc',
-                    justifyContent: 'center',
-                }}>
-                <Image
-                    source={require( '../assets/Logo.png' )}
-                    style={{
-                        height: 150,
-                        resizeMode: 'contain',
-                        alignSelf: 'center',
-                    }}
-                />
-                <Text style={styles.successTextStyle}>
-                    Registration Successful
-                </Text>
-                <TouchableOpacity
-                    style={styles.buttonStyle}
-                    activeOpacity={0.5}
-                    onPress={() => props.navigation.navigate( 'LoginScreen' )}>
-                    <Text style={styles.buttonTextStyle}>Login Now</Text>
-                </TouchableOpacity>
-            </View>
-        );
-    }
     return (
         <View style={{ flex: 1, backgroundColor: '#307ecc' }}>
             <Loader loading={loading} />
@@ -196,7 +151,7 @@ const RegisterScreen = ( props ) => {
                         <TextInput
                             style={styles.inputStyle}
                             onChangeText={( value ) =>
-                                setConfirmedPassword( value )
+                                setConfirmPassword( value )
                             }
                             underlineColorAndroid="#f000"
                             placeholder="Confirm Password"
