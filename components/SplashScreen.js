@@ -18,6 +18,9 @@ const SplashScreen = ( { navigation } ) => {
     const [ animating, setAnimating ] = useState( true );
 
     useEffect( () => {
+        AsyncStorage.removeItem( 'auth' );
+        AsyncStorage.removeItem( 'email' );
+        AsyncStorage.removeItem( 'password' );
         setTimeout( () => {
             setAnimating( false );
             AsyncStorage.getItem( 'auth' ).then( async ( value ) => {

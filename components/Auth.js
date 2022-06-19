@@ -1,5 +1,6 @@
 /* eslint-disable prettier/prettier */
 /* eslint-disable react-native/no-inline-styles */
+/* eslint-disable react-hooks/exhaustive-deps */
 /* eslint-disable no-alert */
 import React, { useEffect, useState } from 'react';
 import {
@@ -45,9 +46,9 @@ const LoginScreen = ( { navigation } ) => {
                 setErrortext( response.message );
                 alert( JSON.stringify( response.message ) );
             }
-            AsyncStorage.setItem( 'email', email );
-            AsyncStorage.setItem( 'password', password );
-            AsyncStorage.setItem( 'auth', JSON.stringify( { user, token } ) );
+            await AsyncStorage.setItem( 'email', email );
+            await AsyncStorage.setItem( 'password', password );
+            await AsyncStorage.setItem( 'auth', JSON.stringify( { user, token } ) );
             navigation.replace( 'Home' );
 
         } catch ( err )
@@ -65,6 +66,7 @@ const LoginScreen = ( { navigation } ) => {
             setLoading( true );
             const storageMail = await AsyncStorage.getItem( 'email' );
             const storagePass = await AsyncStorage.getItem( 'password' );
+            if ( !storageMail || storagePass ) { return setLoading( false ); }
             const response = await ( await login( { email: storageMail, password: storagePass } ) ).json();
             const { user, token } = response;
             if ( !user || !token ) throw new Error( response.message );
