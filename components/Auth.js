@@ -43,17 +43,15 @@ const LoginScreen = ( { navigation } ) => {
             const { user, token } = response;
             if ( !user || !token )
             {
-                setErrortext( response.message );
-                alert( JSON.stringify( response.message ) );
+                return setErrortext( "Email or Passowrd are invalid..." );
             }
             await AsyncStorage.setItem( 'email', email );
             await AsyncStorage.setItem( 'password', password );
             await AsyncStorage.setItem( 'auth', JSON.stringify( { user, token } ) );
             navigation.replace( 'Home' );
-
         } catch ( err )
         {
-            console.log( err );
+            alert( JSON.stringify( err.message ) );
         } finally
         {
             setLoading( false );
