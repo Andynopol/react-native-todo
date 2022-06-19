@@ -10,8 +10,8 @@ import {
     Image,
     AsyncStorage,
 } from 'react-native';
-
 import decode from 'jwt-decode';
+import { login } from '../api/userApi';
 
 const SplashScreen = ( { navigation } ) => {
     //State for ActivityIndicator animation
@@ -34,16 +34,24 @@ const SplashScreen = ( { navigation } ) => {
 
                     }
                     AsyncStorage.removeItem( 'auth' );
-                    return navigation.replace( 'Auth' );
+                    autologin();
                 } catch ( err )
                 {
-                    console.log( err );
+                    return navigation.replace( 'Auth' );
                 }
-
             }
             );
         }, 3000 );
     }, [] );
+
+    const autologin = async () => {
+        const email = await AsyncStorage.getItem( 'email' );
+        const password = await AsyncStorage.getItem( 'password' );
+        const response = await ( await login( { email, password } ) ).json();
+        const { user, token } = response;
+        if ( !user || !token ) throw new Error( "Go to login" );
+        AsyncStorage.setItem( 'auth', JSON.stringify( { user, token } ) );
+    };
 
     return (
         <View style={styles.container}>

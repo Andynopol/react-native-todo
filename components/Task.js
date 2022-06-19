@@ -3,7 +3,7 @@ import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 
 const Task = ( props ) => {
-
+    const { todoId } = props;
     return (
         <View style={styles.item}>
             <View style={styles.itemLeft}>

@@ -1,56 +1,97 @@
 /* eslint-disable prettier/prettier */
 /* eslint-disable react-native/no-inline-styles */
+/* eslint-disable react-hooks/exhaustive-deps */
 import React, { useState, useEffect } from 'react';
 import { KeyboardAvoidingView, StyleSheet, Text, View, TextInput, TouchableOpacity, Keyboard, ScrollView, Platform, AsyncStorage } from 'react-native';
-import { store } from '../api/todosApi';
+import { getTodos, remove, store } from '../api/todosApi';
 import Loader from './Loader';
 import Task from './Task';
 
 const Main = () => {
     const [ task, setTask ] = useState();
     const [ taskItems, setTaskItems ] = useState( [] );
-    const [ loader, setLoader ] = useState( false );
+    const [ loading, setLoading ] = useState( false );
 
     const handleAddTask = async () => {
         Keyboard.dismiss();
         try
         {
-            setLoader( true );
+            setLoading( true );
             const { user } = JSON.parse( await AsyncStorage.getItem( 'auth' ) );
             const response = await ( await store( { _id: user._id, content: task } ) ).json();
-            setTaskItems( [ ...taskItems, task ] );
+            const { todos } = response;
+            if ( !todos )
+            {
+                throw new Error( response.message );
+            }
+            setTaskItems( [ ...todos ] );
             setTask( null );
         } catch ( err )
         {
-            console.log( err );
-            setLoader( false );
+            alert( err.message );
+            setLoading( false );
         }
         finally
         {
-            setLoader( false );
+            setLoading( false );
         }
 
     };
 
-    const completeTask = ( index ) => {
-        let itemsCopy = [ ...taskItems ];
-        itemsCopy.splice( index, 1 );
-        setTaskItems( itemsCopy );
+    const completeTask = async ( todoId ) => {
+        try
+        {
+            setLoading( true );
+            const { user } = JSON.parse( await AsyncStorage.getItem( 'auth' ) );
+            const response = await ( await remove( { _id: user._id, todoId } ) ).json();
+            const { todos } = response;
+            if ( !todos ) throw new Error( "Delete task fail" );
+            setTaskItems( [ ...todos ] );
+
+        } catch ( err )
+        {
+            alert( err.message );
+        }
+        finally
+        {
+            setLoading( false );
+        }
     };
 
     const loadSavedTasks = async () => {
         const auth = JSON.parse( await AsyncStorage.getItem( 'auth' ) );
         const { user } = auth;
-        setTaskItems( [ ...user.todos ] );
+        try
+        {
+            const response = await ( await getTodos( user._id ) ).json();
+            const { todos } = response;
+            if ( !todos ) throw new Error( response.message );
+            user.todos = todos;
+            setTaskItems( [ ...user.todos ] );
+            AsyncStorage.setItem( 'auth', auth );
+        } catch ( err )
+        {
+            alert( err.message );
+        }
+    };
+
+    const updateAuth = async () => {
+        const auth = JSON.parse( await AsyncStorage.getItem( 'auth' ) );
+        auth.user.todos = [ ...taskItems ];
+        await AsyncStorage.setItem( 'auth', JSON.parse( { ...auth } ) );
     };
 
     useEffect( () => {
         loadSavedTasks();
     }, [] );
 
+    useEffect( () => {
+        updateAuth();
+    }, [ taskItems ] );
+
     return (
         <View style={styles.container}>
-            <Loader loading={loader} />
+            <Loader loading={loading} />
             <ScrollView
                 contentContainerStyle={{
                     flexGrow: 1,
@@ -66,7 +107,7 @@ const Main = () => {
                         {
                             taskItems.map( ( item, index ) => {
                                 return (
-                                    <TouchableOpacity key={item.todoId} onPress={() => completeTask( index )}>
+                                    <TouchableOpacity key={item.todoId} onPress={() => completeTask( item.todoId )}>
                                         <Task text={item.content} />
                                     </TouchableOpacity>
                                 );

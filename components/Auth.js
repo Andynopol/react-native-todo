@@ -1,7 +1,7 @@
 /* eslint-disable prettier/prettier */
 /* eslint-disable react-native/no-inline-styles */
 /* eslint-disable no-alert */
-import React, { useState, createRef } from 'react';
+import React, { useState } from 'react';
 import {
     StyleSheet,
     TextInput,
@@ -22,8 +22,6 @@ const LoginScreen = ( { navigation } ) => {
     const [ password, setPassword ] = useState( '' );
     const [ loading, setLoading ] = useState( false );
     const [ errortext, setErrortext ] = useState( '' );
-
-    const passwordInputRef = createRef();
 
     const handleSubmitPress = async () => {
         try
@@ -47,6 +45,8 @@ const LoginScreen = ( { navigation } ) => {
                 setErrortext( response.message );
                 alert( JSON.stringify( response.message ) );
             }
+            AsyncStorage.setItem( 'email', email );
+            AsyncStorage.setItem( 'password', password );
             AsyncStorage.setItem( 'auth', JSON.stringify( { user, token } ) );
             navigation.replace( 'Home' );
 
@@ -93,10 +93,6 @@ const LoginScreen = ( { navigation } ) => {
                                 autoCapitalize="none"
                                 keyboardType="email-address"
                                 returnKeyType="next"
-                                onSubmitEditing={() =>
-                                    passwordInputRef.current &&
-                                    passwordInputRef.current.focus()
-                                }
                                 underlineColorAndroid="#f000"
                                 blurOnSubmit={false}
                             />
@@ -110,7 +106,6 @@ const LoginScreen = ( { navigation } ) => {
                                 placeholder="Enter Password" //12345
                                 placeholderTextColor="#8b9cb5"
                                 keyboardType="default"
-                                ref={passwordInputRef}
                                 onSubmitEditing={Keyboard.dismiss}
                                 blurOnSubmit={false}
                                 secureTextEntry={true}
